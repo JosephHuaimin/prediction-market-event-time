@@ -1,8 +1,10 @@
+import json
 from pathlib import Path
 
 import pandas as pd
 
 UNIVERSE_PATH = Path("data/processed/event_time_universe.csv")
+BUILD_STATS_PATH = Path("data/processed/event_time_universe_build_stats.json")
 SAMPLE_PATH = Path("data/processed/event_time_stratified_sample.csv")
 DOWNLOAD_SUMMARY_PATH = Path("data/processed/event_time_sample_candle_download_summary.csv")
 TIMEPOINT_PATH = Path("data/processed/event_time_timepoint_probabilities.csv")
@@ -21,7 +23,7 @@ TIMEPOINT_ORDER = [
 ]
 
 
-def add_filter_counts(universe_df):
+def add_filter_counts(universe_df, start_date, end_date):
     universe_df = universe_df.copy()
     universe_df["open_time"] = pd.to_datetime(universe_df["open_time"], errors="coerce", utc=True)
     universe_df["close_time"] = pd.to_datetime(universe_df["close_time"], errors="coerce", utc=True)
@@ -39,6 +41,13 @@ def add_filter_counts(universe_df):
         (resolved_binary_df["close_time"] >= resolved_binary_df["open_time"])
     ].copy()
 
+    start_ts = pd.Timestamp(start_date, tz="UTC")
+    end_ts_exclusive = pd.Timestamp(end_date, tz="UTC") + pd.Timedelta(days=1)
+    valid_time_df = valid_time_df[
+        (valid_time_df["close_time"] >= start_ts) &
+        (valid_time_df["close_time"] < end_ts_exclusive)
+    ].copy()
+
     return {
         "unique_markets_in_fixed_date_window": universe_df["ticker"].nunique(),
         "unique_resolved_binary_markets": resolved_binary_df["ticker"].nunique(),
@@ -51,6 +60,11 @@ def main():
     sample_df = pd.read_csv(SAMPLE_PATH, low_memory=False)
     download_summary_df = pd.read_csv(DOWNLOAD_SUMMARY_PATH, low_memory=False)
     timepoint_df = pd.read_csv(TIMEPOINT_PATH, low_memory=False)
+    build_stats = {}
+
+    if BUILD_STATS_PATH.exists():
+        with open(BUILD_STATS_PATH, "r", encoding="utf-8") as file:
+            build_stats = json.load(file)
 
     timepoint_df["outcome"] = pd.to_numeric(timepoint_df["outcome"], errors="coerce")
     timepoint_df["implied_prob"] = pd.to_numeric(timepoint_df["implied_prob"], errors="coerce")
@@ -135,7 +149,11 @@ def main():
 
     calibration_df.to_csv(LAST_PRECLOSE_CALIBRATION_PATH, index=False)
 
-    filter_counts = add_filter_counts(universe_df)
+    filter_counts = add_filter_counts(
+        universe_df,
+        start_date=build_stats["start_date"],
+        end_date=build_stats["end_date"],
+    )
     matched_counts = (
         valid_df.groupby("timepoint")["ticker"]
         .nunique()
@@ -146,6 +164,15 @@ def main():
 
     sample_construction_df = pd.DataFrame(
         [
+            {
+                "step": "unique_markets_pulled_from_metadata",
+                "count": int(build_stats.get("unique_markets_pulled_from_metadata", 0)),
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique market tickers observed anywhere in the metadata pull "
+                    "before applying the fixed date window."
+                ),
+            },
             {
                 "step": "unique_markets_in_fixed_date_window",
                 "count": filter_counts["unique_markets_in_fixed_date_window"],
@@ -169,8 +196,9 @@ def main():
                 "count": filter_counts["unique_valid_time_markets"],
                 "unit": "unique_ticker_count",
                 "definition": (
-                    "Unique markets with both open_time and close_time "
-                    "present and ordered correctly."
+                    "Unique markets with both open_time and close_time present, "
+                    "ordered correctly, and a close_time inside the event-time "
+                    "analysis window."
                 ),
             },
             {

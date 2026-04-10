@@ -43,15 +43,18 @@ All counts below are unique market counts, not raw API row counts, pagination co
 The separate crawl volume from the metadata build is tracked in `data/processed/event_time_universe_build_stats.json`.
 The main attrition step occurs at the valid-open/close filter because many metadata tickers in the broader pull do not expose both timestamps in a form usable for event-time alignment.
 
+- Unique markets pulled from metadata: `5,677,569`
 - Unique markets in the fixed date window: `5,672,782`
 - Unique resolved binary Yes/No markets: `5,664,903`
-- Unique markets with valid open/close times: `317,072`
+- Unique markets with valid open/close times: `317,071`
 - Stratified sample drawn: `600`
-- Markets with candle downloads completed: `600`
+- Candlestick downloads completed: `600`
 - Markets matched at `1d_before_close`: `166`
 - Markets matched at `6h_before_close`: `279`
 - Markets matched at `1h_before_close`: `295`
 - Markets matched at `last_preclose`: `447`
+
+One metadata edge case entered the fixed-window universe through `settlement_ts` even though its `close_time` fell just before the window start. It is excluded from the event-time sample frame, which is why the valid `open_time/close_time` sample frame is `317,071` rather than `317,072`.
 
 ## Key Findings
 
@@ -84,6 +87,16 @@ The coarse-bin calibration table is saved at `data/processed/event_time_last_pre
 - The highest-probability bin averaged `0.9730` and had an actual Yes rate of `0.9463`.
 - The middle bin averaged `0.5064` and had an actual Yes rate of `0.4247`, suggesting weaker calibration away from the extremes.
 
+### Last Pre-Close Gap Sensitivity
+
+The sensitivity table is saved at `data/processed/event_time_last_preclose_gap_sensitivity.csv`.
+
+- The baseline `last_preclose` sample contains `447` matched markets with a Brier score of `0.0615`.
+- Capping the final-candle gap at `24h` leaves `428` markets and produces a very similar Brier score of `0.0627`.
+- Capping the final-candle gap at `6h` leaves `410` markets and produces a Brier score of `0.0640`.
+
+That robustness check suggests the headline near-close result is not being driven by a small number of stale last-candle outliers.
+
 ## Figures
 
 ### Brier Score Vs Time To Close
@@ -109,9 +122,11 @@ python src/draw_stratified_sample.py
 python src/download_sample_candles.py
 python src/extract_timepoint_probs.py
 python src/compute_metrics.py
+python src/compute_last_preclose_sensitivity.py
 python src/plot_brier_vs_time.py
 python src/plot_average_paths.py
 python src/plot_last_preclose_calibration.py
+python src/check_data_reasonableness.py
 ```
 
 ## Repo Outputs
@@ -124,6 +139,7 @@ python src/plot_last_preclose_calibration.py
 - `data/processed/event_time_average_path_by_outcome.csv`
 - `data/processed/event_time_last_preclose_dataset.csv`
 - `data/processed/event_time_last_preclose_calibration.csv`
+- `data/processed/event_time_last_preclose_gap_sensitivity.csv`
 - `data/processed/event_time_sample_construction_table.csv`
 - `data/processed/event_time_universe_build_stats.json`
 - `results/event_time_brier_vs_time.png`
@@ -134,6 +150,7 @@ python src/plot_last_preclose_calibration.py
 
 - The final matched sample differs by timepoint because some markets do not have a usable candle near every target horizon.
 - The current design uses the nearest available candle within a fixed tolerance window rather than an exact time-to-close match.
+- The `last_preclose` definition uses the final available candle before close without imposing a hard gap cap; the saved sensitivity table shows that the main result is stable under `24h` and `6h` caps.
 - The large raw universe file and raw candlestick JSON files are intentionally not tracked in Git because they are rebuildable and too large for a clean repository.
 - These results should be interpreted as an empirical project result for this sampled design, not as a universal statement about all prediction markets.
 

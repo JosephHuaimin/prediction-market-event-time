@@ -13,5 +13,6 @@
     "rows_written": 2246569
   },
   "raw_markets_scanned_total": 5677569,
+  "unique_markets_pulled_from_metadata": 5677569,
   "date_window_universe_count": 5672782
 }

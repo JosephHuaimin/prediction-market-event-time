@@ -1,6 +1,7 @@
 import argparse
 import csv
 import json
+import sqlite3
 from pathlib import Path
 
 import pandas as pd
@@ -13,6 +14,7 @@ LIVE_MARKETS_URL = f"{BASE_URL}/markets"
 
 OUTPUT_PATH = Path("data/processed/event_time_universe.csv")
 STATS_PATH = Path("data/processed/event_time_universe_build_stats.json")
+SCAN_DB_PATH = Path("data/processed/.event_time_metadata_scan.sqlite")
 
 FIELDNAMES = [
     "ticker",
@@ -131,7 +133,53 @@ def normalize_market(market, source):
     }
 
 
-def stream_historical_markets(writer, start_date, end_date, limit, max_pages):
+def create_scan_tracker():
+    if SCAN_DB_PATH.exists():
+        SCAN_DB_PATH.unlink()
+
+    connection = sqlite3.connect(SCAN_DB_PATH)
+    connection.execute("PRAGMA journal_mode = OFF")
+    connection.execute("PRAGMA synchronous = OFF")
+    connection.execute("PRAGMA temp_store = MEMORY")
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS scanned_tickers (
+            ticker TEXT PRIMARY KEY
+        )
+        """
+    )
+    connection.commit()
+    return connection
+
+
+def track_scanned_tickers(connection, markets):
+    ticker_rows = []
+    for market in markets:
+        ticker = market.get("ticker")
+        if ticker:
+            ticker_rows.append((ticker,))
+
+    if not ticker_rows:
+        return
+
+    connection.executemany(
+        "INSERT OR IGNORE INTO scanned_tickers (ticker) VALUES (?)",
+        ticker_rows,
+    )
+    connection.commit()
+
+
+def count_scanned_tickers(connection):
+    return int(connection.execute("SELECT COUNT(*) FROM scanned_tickers").fetchone()[0])
+
+
+def remove_scan_tracker(connection):
+    connection.close()
+    if SCAN_DB_PATH.exists():
+        SCAN_DB_PATH.unlink()
+
+
+def stream_historical_markets(writer, start_date, end_date, limit, max_pages, scan_tracker):
     session = requests.Session()
     cursor = None
     page_number = 1
@@ -156,6 +204,7 @@ def stream_historical_markets(writer, start_date, end_date, limit, max_pages):
         pages_fetched += 1
 
         rows_scanned += len(markets)
+        track_scanned_tickers(scan_tracker, markets)
 
         for market in markets:
             if not market_in_window(market, start_date, end_date):
@@ -189,7 +238,7 @@ def stream_historical_markets(writer, start_date, end_date, limit, max_pages):
     }
 
 
-def stream_live_markets(writer, min_settled_ts, max_settled_ts, limit, max_pages):
+def stream_live_markets(writer, min_settled_ts, max_settled_ts, limit, max_pages, scan_tracker):
     session = requests.Session()
     cursor = None
     page_number = 1
@@ -217,6 +266,7 @@ def stream_live_markets(writer, min_settled_ts, max_settled_ts, limit, max_pages
         pages_fetched += 1
 
         rows_scanned += len(markets)
+        track_scanned_tickers(scan_tracker, markets)
 
         for market in markets:
             writer.writerow(normalize_market(market, "live"))
@@ -263,6 +313,8 @@ def main():
     live_min_settled_ts = max(start_ts, market_cutoff_ts)
     live_max_settled_ts = end_ts_exclusive
 
+    scan_tracker = create_scan_tracker()
+
     with open(OUTPUT_PATH, "w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
         writer.writeheader()
@@ -273,6 +325,7 @@ def main():
             end_date=end_date,
             limit=args.limit,
             max_pages=args.max_historical_pages,
+            scan_tracker=scan_tracker,
         )
 
         live_stats = stream_live_markets(
@@ -281,7 +334,11 @@ def main():
             max_settled_ts=live_max_settled_ts,
             limit=args.limit,
             max_pages=args.max_live_pages,
+            scan_tracker=scan_tracker,
         )
+
+    unique_markets_pulled_from_metadata = count_scanned_tickers(scan_tracker)
+    remove_scan_tracker(scan_tracker)
 
     universe_df = pd.read_csv(OUTPUT_PATH, low_memory=False)
     universe_df = universe_df.drop_duplicates(subset=["ticker"]).copy()
@@ -296,6 +353,7 @@ def main():
         "raw_markets_scanned_total": (
             historical_stats["rows_scanned"] + live_stats["rows_scanned"]
         ),
+        "unique_markets_pulled_from_metadata": unique_markets_pulled_from_metadata,
         "date_window_universe_count": int(len(universe_df)),
     }
 

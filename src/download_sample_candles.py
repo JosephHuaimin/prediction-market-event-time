@@ -110,6 +110,7 @@ def main():
     df = pd.read_csv(INPUT_PATH, low_memory=False)
     df["open_time"] = pd.to_datetime(df["open_time"], errors="coerce", utc=True)
     df["close_time"] = pd.to_datetime(df["close_time"], errors="coerce", utc=True)
+    sample_tickers = set(df["ticker"])
 
     cutoff_response = requests.get(CUTOFF_URL, timeout=30)
     cutoff_response.raise_for_status()
@@ -119,7 +120,11 @@ def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     session = requests.Session()
-    existing_summary = load_existing_summary()
+    existing_summary = {
+        ticker: row
+        for ticker, row in load_existing_summary().items()
+        if ticker in sample_tickers
+    }
     summary_rows = list(existing_summary.values())
     success_count = 0
     fail_count = 0

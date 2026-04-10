@@ -1,7 +1,8 @@
 step,count,unit,definition
+unique_markets_pulled_from_metadata,5677569,unique_ticker_count,Unique market tickers observed anywhere in the metadata pull before applying the fixed date window.
 unique_markets_in_fixed_date_window,5672782,unique_ticker_count,Unique markets in the metadata universe that resolve inside the fixed date window.
 unique_resolved_binary_yes_no_markets,5664903,unique_ticker_count,Unique markets in the metadata universe that are binary and have an explicit Yes/No outcome.
-unique_markets_with_valid_open_close_times,317072,unique_ticker_count,Unique markets with both open_time and close_time present and ordered correctly.
+unique_markets_with_valid_open_close_times,317071,unique_ticker_count,"Unique markets with both open_time and close_time present, ordered correctly, and a close_time inside the event-time analysis window."
 stratified_sample_drawn,600,unique_ticker_count,Unique markets retained in the stratified sample.
 markets_with_candle_downloads_completed,600,unique_ticker_count,Unique sampled markets with candle files retrieved.
 matched_markets_1d_before_close,166,unique_ticker_count,Unique sampled market tickers with a matched candle within the 1-day tolerance window.
