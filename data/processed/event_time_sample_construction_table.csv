@@ -1,8 +1,10 @@
 step,count
-raw_markets_scanned_total,5677569
-after_date_window_filter,5672782
-after_resolved_binary_filter,5664903
-after_valid_time_filter,317072
-sampled_markets,600
-candles_successfully_retrieved,600
-final_analysis_sample_last_preclose,447
+unique_markets_in_fixed_date_window,5672782
+unique_resolved_binary_markets,5664903
+unique_valid_time_markets,317072
+unique_sampled_markets,600
+unique_markets_with_candles,600
+matched_markets_1d_before_close,166
+matched_markets_6h_before_close,279
+matched_markets_1h_before_close,295
+matched_markets_last_preclose,447

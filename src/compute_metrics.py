@@ -1,10 +1,8 @@
-import json
 from pathlib import Path
 
 import pandas as pd
 
 UNIVERSE_PATH = Path("data/processed/event_time_universe.csv")
-UNIVERSE_STATS_PATH = Path("data/processed/event_time_universe_build_stats.json")
 SAMPLE_PATH = Path("data/processed/event_time_stratified_sample.csv")
 DOWNLOAD_SUMMARY_PATH = Path("data/processed/event_time_sample_candle_download_summary.csv")
 TIMEPOINT_PATH = Path("data/processed/event_time_timepoint_probabilities.csv")
@@ -42,9 +40,9 @@ def add_filter_counts(universe_df):
     ].copy()
 
     return {
-        "after_resolved_binary_filter": len(resolved_binary_df),
-        "after_valid_time_filter": len(valid_time_df),
-        "after_date_window_filter": len(universe_df),
+        "unique_markets_in_fixed_date_window": universe_df["ticker"].nunique(),
+        "unique_resolved_binary_markets": resolved_binary_df["ticker"].nunique(),
+        "unique_valid_time_markets": valid_time_df["ticker"].nunique(),
     }
 
 
@@ -70,7 +68,7 @@ def main():
     metrics_df = (
         valid_df.groupby("timepoint", as_index=False)
         .agg(
-            market_count=("ticker", "count"),
+            market_count=("ticker", "nunique"),
             brier_score=("squared_error", "mean"),
             mae=("absolute_error", "mean"),
             avg_implied_prob=("implied_prob", "mean"),
@@ -88,7 +86,7 @@ def main():
     average_paths_df = (
         valid_df.groupby(["timepoint", "outcome"], as_index=False)
         .agg(
-            market_count=("ticker", "count"),
+            market_count=("ticker", "nunique"),
             avg_implied_prob=("implied_prob", "mean"),
         )
     )
@@ -137,42 +135,52 @@ def main():
 
     calibration_df.to_csv(LAST_PRECLOSE_CALIBRATION_PATH, index=False)
 
-    build_stats = {}
-    if UNIVERSE_STATS_PATH.exists():
-        with open(UNIVERSE_STATS_PATH, "r", encoding="utf-8") as file:
-            build_stats = json.load(file)
-
     filter_counts = add_filter_counts(universe_df)
+    matched_counts = (
+        valid_df.groupby("timepoint")["ticker"]
+        .nunique()
+        .reindex(TIMEPOINT_ORDER, fill_value=0)
+    )
+
+    successful_candles = download_summary_df[download_summary_df["success"]].copy()
 
     sample_construction_df = pd.DataFrame(
         [
             {
-                "step": "raw_markets_scanned_total",
-                "count": build_stats.get("raw_markets_scanned_total"),
+                "step": "unique_markets_in_fixed_date_window",
+                "count": filter_counts["unique_markets_in_fixed_date_window"],
             },
             {
-                "step": "after_date_window_filter",
-                "count": filter_counts["after_date_window_filter"],
+                "step": "unique_resolved_binary_markets",
+                "count": filter_counts["unique_resolved_binary_markets"],
             },
             {
-                "step": "after_resolved_binary_filter",
-                "count": filter_counts["after_resolved_binary_filter"],
+                "step": "unique_valid_time_markets",
+                "count": filter_counts["unique_valid_time_markets"],
             },
             {
-                "step": "after_valid_time_filter",
-                "count": filter_counts["after_valid_time_filter"],
+                "step": "unique_sampled_markets",
+                "count": sample_df["ticker"].nunique(),
             },
             {
-                "step": "sampled_markets",
-                "count": len(sample_df),
+                "step": "unique_markets_with_candles",
+                "count": successful_candles["ticker"].nunique(),
             },
             {
-                "step": "candles_successfully_retrieved",
-                "count": int(download_summary_df["success"].sum()),
+                "step": "matched_markets_1d_before_close",
+                "count": int(matched_counts["1d_before_close"]),
             },
             {
-                "step": "final_analysis_sample_last_preclose",
-                "count": last_preclose_df["ticker"].nunique(),
+                "step": "matched_markets_6h_before_close",
+                "count": int(matched_counts["6h_before_close"]),
+            },
+            {
+                "step": "matched_markets_1h_before_close",
+                "count": int(matched_counts["1h_before_close"]),
+            },
+            {
+                "step": "matched_markets_last_preclose",
+                "count": int(matched_counts["last_preclose"]),
             },
         ]
     )

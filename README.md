@@ -1,6 +1,6 @@
 # Prediction Market Event-Time Study
 
-Pilot event-time study of 600 stratified Kalshi binary markets. As resolution approached, prices became materially more informative: the last pre-close Brier score was `0.0615` on `447` matched markets, and average implied probabilities separated from `0.56 vs 0.31` at `1d before close` to `0.88 vs 0.13` at `last pre-close` for eventual Yes vs No outcomes.
+Pilot event-time study of 600 stratified Kalshi binary markets. As resolution approached, prices became materially more informative: the last pre-close Brier score was `0.0615` on `447` matched markets, and average implied probabilities separated from `0.56 vs 0.31` at `1d before close` to `0.88 vs 0.13` at `last pre-close` for eventual Yes vs No outcomes. The matched sample varies by horizon because candle availability differs across markets.
 
 ## Overview
 
@@ -39,13 +39,18 @@ Instead of evaluating calibration only at one static snapshot, this repository a
 
 The sample-construction table is saved at `data/processed/event_time_sample_construction_table.csv`.
 
-- Raw metadata scanned: `5,677,569`
-- Markets in the fixed date window: `5,672,782`
-- Resolved binary Yes/No markets: `5,664,903`
-- Markets with valid open/close times: `317,072`
-- Stratified sample drawn: `600`
-- Candlestick downloads completed: `600`
-- Final last-preclose analysis sample: `447`
+All counts below are unique `ticker` counts, not raw API row counts.
+The separate crawl volume from the metadata build is tracked in `data/processed/event_time_universe_build_stats.json`.
+
+- Unique markets in the fixed date window: `5,672,782`
+- Unique resolved binary Yes/No markets: `5,664,903`
+- Unique markets with valid open/close times: `317,072`
+- Unique stratified sample drawn: `600`
+- Unique sampled markets with candlesticks retrieved: `600`
+- Matched markets at `1d_before_close`: `166`
+- Matched markets at `6h_before_close`: `279`
+- Matched markets at `1h_before_close`: `295`
+- Matched markets at `last_preclose`: `447`
 
 ## Key Findings
 
@@ -53,14 +58,14 @@ The metrics table is saved at `data/processed/event_time_metrics_by_timepoint.cs
 
 ### Accuracy Near Close
 
-| Timepoint | Market Count | Brier Score | MAE |
+| Timepoint | Matched Markets | Brier Score | MAE |
 | --- | ---: | ---: | ---: |
 | 1d before close | 166 | 0.1854 | 0.3630 |
 | 6h before close | 279 | 0.1823 | 0.3707 |
 | 1h before close | 295 | 0.0955 | 0.1904 |
 | Last pre-close | 447 | 0.0615 | 0.1257 |
 
-The cleanest signal appears in the final hour and especially at the last pre-close observation.
+The cleanest signal appears in the final hour and especially at the last pre-close observation. These matched counts differ by horizon because some markets do not have a usable candle inside every tolerance window.
 
 ### Path Separation By Eventual Outcome
 
@@ -70,7 +75,7 @@ The average-path table is saved at `data/processed/event_time_average_path_by_ou
 - `eventual_no` average implied probability falls from `0.3111` at `1d_before_close` to `0.1319` at `last_preclose`.
 - The Yes/No separation gap widens from roughly `0.25` to `0.75` as markets approach resolution.
 
-### Last Pre-Close Calibration
+### Coarse-Bin Last Pre-Close Calibration (4 bins)
 
 The coarse-bin calibration table is saved at `data/processed/event_time_last_preclose_calibration.csv`.
 
@@ -88,7 +93,7 @@ The coarse-bin calibration table is saved at `data/processed/event_time_last_pre
 
 ![Average paths](results/event_time_average_paths.png)
 
-### Last Pre-Close Calibration
+### Coarse-Bin Last Pre-Close Calibration (4 bins)
 
 ![Last preclose calibration](results/event_time_last_preclose_calibration.png)
 

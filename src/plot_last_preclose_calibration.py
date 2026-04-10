@@ -11,6 +11,7 @@ OUTPUT_PATH = Path("results/event_time_last_preclose_calibration.png")
 def main():
     calibration_df = pd.read_csv(CALIBRATION_PATH, low_memory=False)
     last_df = pd.read_csv(LAST_DATASET_PATH, low_memory=False)
+    bin_count = len(calibration_df)
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
@@ -31,7 +32,7 @@ def main():
 
     axes[0].set_xlabel("Average Predicted Probability")
     axes[0].set_ylabel("Actual Yes Rate")
-    axes[0].set_title("Last Pre-close Calibration")
+    axes[0].set_title(f"Coarse-bin Last Pre-close Calibration ({bin_count} bins)")
     axes[0].set_xlim(0, 1)
     axes[0].set_ylim(0, 1)
 
