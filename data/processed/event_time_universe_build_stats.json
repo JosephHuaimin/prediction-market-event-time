@@ -1,0 +1,17 @@
+{
+  "start_date": "2025-04-01",
+  "end_date": "2026-03-31",
+  "historical_cutoff_market_settled_ts": "2026-01-09T00:00:00Z",
+  "historical": {
+    "pages_fetched": 3431,
+    "rows_scanned": 3431000,
+    "rows_written": 3426213
+  },
+  "live": {
+    "pages_fetched": 2247,
+    "rows_scanned": 2246569,
+    "rows_written": 2246569
+  },
+  "raw_markets_scanned_total": 5677569,
+  "date_window_universe_count": 5672782
+}

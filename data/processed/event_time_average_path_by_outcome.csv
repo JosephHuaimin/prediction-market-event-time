@@ -1,0 +1,9 @@
+timepoint,outcome,market_count,avg_implied_prob,outcome_label
+1d_before_close,0.0,100,0.3111,eventual_no
+6h_before_close,0.0,166,0.3439156626506024,eventual_no
+1h_before_close,0.0,168,0.16148809523809524,eventual_no
+last_preclose,0.0,270,0.13192592592592592,eventual_no
+1d_before_close,1.0,66,0.5583333333333333,eventual_yes
+6h_before_close,1.0,113,0.5899115044247787,eventual_yes
+1h_before_close,1.0,127,0.7714173228346457,eventual_yes
+last_preclose,1.0,177,0.8838418079096045,eventual_yes

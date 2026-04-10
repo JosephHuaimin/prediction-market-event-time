@@ -1,0 +1,8 @@
+step,count
+raw_markets_scanned_total,5677569
+after_date_window_filter,5672782
+after_resolved_binary_filter,5664903
+after_valid_time_filter,317072
+sampled_markets,600
+candles_successfully_retrieved,600
+final_analysis_sample_last_preclose,447
