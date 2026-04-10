@@ -147,43 +147,43 @@ def main():
     sample_construction_df = pd.DataFrame(
         [
             {
-                "step": "unique_metadata_tickers_in_fixed_date_window",
+                "step": "unique_markets_in_fixed_date_window",
                 "count": filter_counts["unique_markets_in_fixed_date_window"],
                 "unit": "unique_ticker_count",
                 "definition": (
-                    "Unique market tickers in the metadata universe that resolve "
+                    "Unique markets in the metadata universe that resolve "
                     "inside the fixed date window."
                 ),
             },
             {
-                "step": "unique_metadata_tickers_resolved_binary_yes_no",
+                "step": "unique_resolved_binary_yes_no_markets",
                 "count": filter_counts["unique_resolved_binary_markets"],
                 "unit": "unique_ticker_count",
                 "definition": (
-                    "Unique market tickers in the metadata universe that are "
-                    "binary and have an explicit Yes/No outcome."
+                    "Unique markets in the metadata universe that are binary "
+                    "and have an explicit Yes/No outcome."
                 ),
             },
             {
-                "step": "unique_metadata_tickers_with_valid_open_close",
+                "step": "unique_markets_with_valid_open_close_times",
                 "count": filter_counts["unique_valid_time_markets"],
                 "unit": "unique_ticker_count",
                 "definition": (
-                    "Unique market tickers with both open_time and close_time "
+                    "Unique markets with both open_time and close_time "
                     "present and ordered correctly."
                 ),
             },
             {
-                "step": "unique_sampled_tickers",
+                "step": "stratified_sample_drawn",
                 "count": sample_df["ticker"].nunique(),
                 "unit": "unique_ticker_count",
-                "definition": "Unique sampled market tickers after stratified sampling.",
+                "definition": "Unique markets retained in the stratified sample.",
             },
             {
-                "step": "unique_sampled_tickers_with_candles",
+                "step": "markets_with_candle_downloads_completed",
                 "count": successful_candles["ticker"].nunique(),
                 "unit": "unique_ticker_count",
-                "definition": "Unique sampled market tickers with candle files retrieved.",
+                "definition": "Unique sampled markets with candle files retrieved.",
             },
             {
                 "step": "matched_markets_1d_before_close",

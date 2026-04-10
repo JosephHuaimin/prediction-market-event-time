@@ -39,11 +39,11 @@ Instead of evaluating calibration only at one static snapshot, this repository a
 
 The sample-construction table is saved at `data/processed/event_time_sample_construction_table.csv`.
 
-All counts below are unique metadata `ticker` counts, not raw API row counts, pagination counts, or duplicated processing rows.
+All counts below are unique market counts, not raw API row counts, pagination counts, or duplicated processing rows.
 The separate crawl volume from the metadata build is tracked in `data/processed/event_time_universe_build_stats.json`.
 The main attrition step occurs at the valid-open/close filter because many metadata tickers in the broader pull do not expose both timestamps in a form usable for event-time alignment.
 
-- Unique markets pulled from metadata into the analysis universe: `5,672,782`
+- Unique markets in the fixed date window: `5,672,782`
 - Unique resolved binary Yes/No markets: `5,664,903`
 - Unique markets with valid open/close times: `317,072`
 - Stratified sample drawn: `600`

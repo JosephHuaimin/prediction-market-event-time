@@ -1,9 +1,9 @@
 step,count,unit,definition
-unique_metadata_tickers_in_fixed_date_window,5672782,unique_ticker_count,Unique market tickers in the metadata universe that resolve inside the fixed date window.
-unique_metadata_tickers_resolved_binary_yes_no,5664903,unique_ticker_count,Unique market tickers in the metadata universe that are binary and have an explicit Yes/No outcome.
-unique_metadata_tickers_with_valid_open_close,317072,unique_ticker_count,Unique market tickers with both open_time and close_time present and ordered correctly.
-unique_sampled_tickers,600,unique_ticker_count,Unique sampled market tickers after stratified sampling.
-unique_sampled_tickers_with_candles,600,unique_ticker_count,Unique sampled market tickers with candle files retrieved.
+unique_markets_in_fixed_date_window,5672782,unique_ticker_count,Unique markets in the metadata universe that resolve inside the fixed date window.
+unique_resolved_binary_yes_no_markets,5664903,unique_ticker_count,Unique markets in the metadata universe that are binary and have an explicit Yes/No outcome.
+unique_markets_with_valid_open_close_times,317072,unique_ticker_count,Unique markets with both open_time and close_time present and ordered correctly.
+stratified_sample_drawn,600,unique_ticker_count,Unique markets retained in the stratified sample.
+markets_with_candle_downloads_completed,600,unique_ticker_count,Unique sampled markets with candle files retrieved.
 matched_markets_1d_before_close,166,unique_ticker_count,Unique sampled market tickers with a matched candle within the 1-day tolerance window.
 matched_markets_6h_before_close,279,unique_ticker_count,Unique sampled market tickers with a matched candle within the 6-hour tolerance window.
 matched_markets_1h_before_close,295,unique_ticker_count,Unique sampled market tickers with a matched candle within the 1-hour tolerance window.
