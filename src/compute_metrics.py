@@ -147,40 +147,79 @@ def main():
     sample_construction_df = pd.DataFrame(
         [
             {
-                "step": "unique_markets_in_fixed_date_window",
+                "step": "unique_metadata_tickers_in_fixed_date_window",
                 "count": filter_counts["unique_markets_in_fixed_date_window"],
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique market tickers in the metadata universe that resolve "
+                    "inside the fixed date window."
+                ),
             },
             {
-                "step": "unique_resolved_binary_markets",
+                "step": "unique_metadata_tickers_resolved_binary_yes_no",
                 "count": filter_counts["unique_resolved_binary_markets"],
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique market tickers in the metadata universe that are "
+                    "binary and have an explicit Yes/No outcome."
+                ),
             },
             {
-                "step": "unique_valid_time_markets",
+                "step": "unique_metadata_tickers_with_valid_open_close",
                 "count": filter_counts["unique_valid_time_markets"],
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique market tickers with both open_time and close_time "
+                    "present and ordered correctly."
+                ),
             },
             {
-                "step": "unique_sampled_markets",
+                "step": "unique_sampled_tickers",
                 "count": sample_df["ticker"].nunique(),
+                "unit": "unique_ticker_count",
+                "definition": "Unique sampled market tickers after stratified sampling.",
             },
             {
-                "step": "unique_markets_with_candles",
+                "step": "unique_sampled_tickers_with_candles",
                 "count": successful_candles["ticker"].nunique(),
+                "unit": "unique_ticker_count",
+                "definition": "Unique sampled market tickers with candle files retrieved.",
             },
             {
                 "step": "matched_markets_1d_before_close",
                 "count": int(matched_counts["1d_before_close"]),
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique sampled market tickers with a matched candle within "
+                    "the 1-day tolerance window."
+                ),
             },
             {
                 "step": "matched_markets_6h_before_close",
                 "count": int(matched_counts["6h_before_close"]),
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique sampled market tickers with a matched candle within "
+                    "the 6-hour tolerance window."
+                ),
             },
             {
                 "step": "matched_markets_1h_before_close",
                 "count": int(matched_counts["1h_before_close"]),
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique sampled market tickers with a matched candle within "
+                    "the 1-hour tolerance window."
+                ),
             },
             {
                 "step": "matched_markets_last_preclose",
                 "count": int(matched_counts["last_preclose"]),
+                "unit": "unique_ticker_count",
+                "definition": (
+                    "Unique sampled market tickers with a final usable candle "
+                    "before market close."
+                ),
             },
         ]
     )
